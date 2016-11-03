@@ -321,12 +321,14 @@ export default class CompilerHost {
       inputMimeType !== 'text/html' &&
       result.mimeType === 'text/html';
 
+    let didKeepMimetype = inputMimeType === result.mimeType;
+
     let isPassthrough =
       result.mimeType === 'text/plain' ||
       !result.mimeType ||
       CompilerHost.shouldPassthrough(hashInfo);
 
-    if ((finalForms[result.mimeType] && !shouldInlineHtmlify) || isPassthrough) {
+    if ((finalForms[result.mimeType] && !shouldInlineHtmlify) || didKeepMimetype || isPassthrough) {
       // Got something we can use in-browser, let's return it
       return Object.assign(result, {dependentFiles});
     } else {
@@ -539,12 +541,14 @@ export default class CompilerHost {
       inputMimeType !== 'text/html' &&
       result.mimeType === 'text/html';
 
+    let didKeepMimetype = inputMimeType === result.mimeType;
+
     let isPassthrough =
       result.mimeType === 'text/plain' ||
       !result.mimeType ||
       CompilerHost.shouldPassthrough(hashInfo);
 
-    if ((finalForms[result.mimeType] && !shouldInlineHtmlify) || isPassthrough) {
+    if ((finalForms[result.mimeType] && !shouldInlineHtmlify) || didKeepMimetype || isPassthrough) {
       // Got something we can use in-browser, let's return it
       return Object.assign(result, {dependentFiles});
     } else {
