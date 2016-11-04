@@ -7,7 +7,7 @@ import mimeTypes from './mime-types';
 import {forAllFiles, forAllFilesSync} from './for-all-files';
 import CompileCache from './compile-cache';
 import FileChangedCache from './file-change-cache';
-import ReadOnlyCompiler from './read-only-compiler';
+import ReadOnlyCompilerFactory from './read-only-compiler';
 
 const d = require('debug-electron')('electron-compile:compiler-host');
 
@@ -107,9 +107,7 @@ export default class CompilerHost {
     let fileChangeCache = FileChangedCache.loadFromData(info.fileChangeCache, appRoot, true);
 
     let compilers = Object.keys(info.compilers).reduce((acc, x) => {
-      let cur = info.compilers[x];
-      acc[x] = new ReadOnlyCompiler(cur.name, cur.compilerVersion, cur.compilerOptions, cur.inputMimeTypes);
-
+      acc[x] = ReadOnlyCompilerFactory(info.compilers[x]);
       return acc;
     }, {});
 
@@ -174,6 +172,7 @@ export default class CompilerHost {
       let val = {
         name: Klass.name,
         inputMimeTypes: Klass.getInputMimeTypes(),
+        outputMimeType: Klass.getOutputMimeType(),
         compilerOptions: compiler.compilerOptions,
         compilerVersion: compiler.getCompilerVersion()
       };
@@ -389,9 +388,7 @@ export default class CompilerHost {
     let fileChangeCache = FileChangedCache.loadFromData(info.fileChangeCache, appRoot, true);
 
     let compilers = Object.keys(info.compilers).reduce((acc, x) => {
-      let cur = info.compilers[x];
-      acc[x] = new ReadOnlyCompiler(cur.name, cur.compilerVersion, cur.compilerOptions, cur.inputMimeTypes);
-
+      acc[x] = ReadOnlyCompilerFactory(info.compilers[x]);
       return acc;
     }, {});
 
@@ -421,6 +418,7 @@ export default class CompilerHost {
       let val = {
         name: Klass.name,
         inputMimeTypes: Klass.getInputMimeTypes(),
+        outputMimeType: Klass.getOutputMimeType(),
         compilerOptions: compiler.compilerOptions,
         compilerVersion: compiler.getCompilerVersion()
       };
@@ -604,7 +602,7 @@ export default class CompilerHost {
   static shouldPassthrough(hashInfo) {
     return hashInfo.isMinified || hashInfo.isInNodeModules || hashInfo.hasSourceMap || hashInfo.isFileBinary;
   }
-    
+
   /**
    * Look at the code of a node modules and see the sourceMapping path.
    * If there is any, check the path and try to fix it with and
@@ -617,18 +615,18 @@ export default class CompilerHost {
 
     if (sourceMappingCheck && sourceMappingCheck[1] && sourceMappingCheck[1] !== ''){
       let sourceMapPath = sourceMappingCheck[1];
-      
+
       try {
         await pfs.stat(sourceMapPath);
       } catch (error) {
         let normRoot = path.normalize(appRoot);
         let absPathToModule = path.dirname(sourcePath.replace(normRoot, '').substring(1));
         let newMapPath = path.join(absPathToModule, sourceMapPath);
-        
+
         return sourceCode.replace(regexSourceMapping, `//# sourceMappingURL=${newMapPath}`);
       }
     }
-    
+
     return sourceCode;
   }
 
@@ -644,18 +642,18 @@ export default class CompilerHost {
 
     if (sourceMappingCheck && sourceMappingCheck[1] && sourceMappingCheck[1] !== ''){
       let sourceMapPath = sourceMappingCheck[1];
-      
+
       try {
         fs.statSync(sourceMapPath);
       } catch (error) {
         let normRoot = path.normalize(appRoot);
         let absPathToModule = path.dirname(sourcePath.replace(normRoot, '').substring(1));
         let newMapPath = path.join(absPathToModule, sourceMapPath);
-        
+
         return sourceCode.replace(regexSourceMapping, `//# sourceMappingURL=${newMapPath}`);
       }
     }
-    
+
     return sourceCode;
   }
 }
