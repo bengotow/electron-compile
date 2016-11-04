@@ -21,7 +21,7 @@ export default function registerRequireExtension(compilerHost) {
     // Only expose extensions to NodeJS if the output of the compiler is
     // supported by NodeJS. This prevents module.resolve from returning
     // `index.less`, for example, and trying to load LESS as JavaScript.
-    if (outputMimeType && !requirableMimeTypes.includes(outputMimeType)) {
+    if (!outputMimeType || !requirableMimeTypes.includes(outputMimeType)) {
       return;
     }
 
